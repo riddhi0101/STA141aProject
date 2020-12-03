@@ -1,0 +1,52 @@
+---
+title: "STA 141A hclust"
+author: "Karl Jang"
+date: "12/1/2020"
+output: html_document
+---
+
+```{r, echo=FALSE}
+setwd("C:/Users/shjan/Documents/STA 141A")
+set.seed(1)
+library(ggplot2)
+library(dplyr)
+review_ratings = read.csv("google_review_ratings.csv", header = TRUE)[,-1]
+
+clusters.1.2 <- review_ratings %>% select(Category.1, Category.2) %>%
+  dist() %>% hclust(method = "average")
+
+names(clusters.1.2)
+plot(clusters.1.2)
+
+review_ratings.all <- review_ratings %>% select(Category.1, 
+                                               Category.2, 
+                                               Category.3, 
+                                               Category.4,
+                                               Category.5,
+                                               Category.6,
+                                               Category.7,
+                                               Category.8,
+                                               Category.9,
+                                               Category.10, 
+                                               Category.11,
+                                               Category.12,
+                                               Category.13,
+                                               Category.14,
+                                               Category.15,
+                                               Category.16,
+                                               Category.17,
+                                               Category.18,
+                                               Category.19,
+                                               Category.20,
+                                               Category.21,
+                                               Category.22,
+                                               Category.23,
+                                               Category.24)
+
+
+clusters.all.f <- review_ratings.all %>%
+  dist() %>% hclust(method = "average")
+
+names(clusters.all.f)
+plot(clusters.all.f)
+```
