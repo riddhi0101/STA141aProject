@@ -55,10 +55,14 @@ review_data %>%rename(
         avg_gardens = Category.24
     )
 
+## K-means- doesnt give a very high silhouette index
 library(NbClust)
 data = data.matrix(review_data)
 data = data[,-1]
+## all indices- takes too long
 nb <- NbClust(data, distance = "euclidean", min.nc = 2,
               max.nc = 30, method = "complete", index ="silhouette")    
 
-?NbClust
+nb <- NbClust(data, distance = "euclidean", min.nc = 2,
+              max.nc = 30, method = "complete", index ="dunn")    
+
