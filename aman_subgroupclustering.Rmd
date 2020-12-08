@@ -1,0 +1,149 @@
+---
+title: "GROUP CLUSTERING AMAN"
+output: html_notebook
+---
+```{r}
+library(dplyr)
+library(kernlab)
+library(cluster)
+## project prelims
+travel_review <- read.csv("~/Desktop/Statistics/google_review_ratings.csv")
+head(travel_review)
+## correcting for errors
+error_lines= which(!is.na(travel_review$X))
+# One line has Category.24 misplaced at another column
+travel_review$Category.24[error_lines[1]] = travel_review$X[error_lines[1]]
+# One line has put a character value at Category.11. Correct it to 2.  
+travel_review$Category.11[error_lines[2]] = 2
+# The line misplaced all columns after Category.12.
+travel_review[error_lines[2],13:25] = travel_review[error_lines[2],14:26]
+# Change Category.11 to numeric 
+travel_review$Category.11 = as.numeric(travel_review$Category.11)
+# Delete an extra column  
+review_data = travel_review[ names(travel_review) != "X"]
+# Delete the temporary variables/data
+if(exists('travel_review')) 
+    rm(travel_review)
+if(exists('error_lines'))
+    rm(error_lines)
+
+# check to see that all observations are complete
+sum(!complete.cases(review_data))
+#pairs(review_data[,2:25],pch = 19, lower.panel = NULL)
+?pairs
+
+## feature combinations
+#aman
+# gym, swimming pools, bakeries
+# resort, beach, spa
+# church, art galleries, monuments
+
+#Riddhi
+# view points, park, beach
+# theater, art galleries, cafe
+# restaurants, bar, local service
+
+#karl
+# bar, burger pizza, juice bar
+# zoo, hotel, dance clubs
+# bakeries, cafe, park
+
+
+
+
+review_data = review_data %>% rename(
+        church = Category.1,
+        resort = Category.2,
+        beach = Category.3,
+        park = Category.4,
+        theatre = Category.5,
+        museum = Category.6,
+        mall = Category.7,
+        zoo = Category.8,
+        restaurant = Category.9,
+        bar = Category.10,
+        local_service = Category.11,
+        burger_pizza = Category.12,
+        hotel = Category.13,
+        juice_bars = Category.14,
+        art_galleries = Category.15,
+        dance_clubs = Category.16,
+        swimming_pool = Category.17,
+        gym = Category.18,
+        bakeries = Category.19,
+        spa = Category.20,
+        cafe = Category.21,
+        view_points = Category.22,
+        monuments = Category.23,
+        gardens = Category.24
+    )
+```
+```{r}
+# gym, swimming pools, bakeries
+library(ggplot2)
+```
+```{r}
+# gym, swimming pools, bakeries
+review_data %>% tidyr::gather("id", "value", 18:19) %>% 
+  ggplot(., aes(bakeries,value))+
+  geom_point()+
+  geom_smooth(method = "lm", se=FALSE, color="blue")+
+  facet_wrap(~id)+
+  geom_smooth(color = "green")
+  
+c1  = review_data %>% select(gym,swimming_pool,bakeries)
+c1 = data.matrix(c1)
+data.mat = data.matrix(review_data)
+kmax=7
+silList=rep(0,kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList[i-1] = mean(ss[, 3])
+}
+silList
+
+
+```
+```{r}
+# resort, beach, spa
+review_data %>% tidyr::gather("id", "value", 2:3) %>% 
+  ggplot(., aes(spa,value))+
+  geom_point()+
+  geom_smooth(method = "lm", se=FALSE, color="blue")+
+  facet_wrap(~id)+
+  geom_smooth(color = "green")
+
+c2  = review_data %>% select(resort,beach,spa)
+c2 = data.matrix(c2)
+kmax=7
+silList=rep(0,kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(c2,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList[i-1] = mean(ss[, 3])
+}
+silList
+
+```
+```{r}
+#church, art galleries, monuments
+review_data %>% tidyr::gather("id", "value", c(2,16)) %>% 
+  ggplot(., aes(monuments,value))+
+  geom_point()+
+  geom_smooth(method = "lm", se=FALSE, color="blue")+
+  facet_wrap(~id)+
+  geom_smooth(color = "green")
+
+c3  = review_data %>% select(church, art_galleries, monuments)
+c3 = data.matrix(c3)
+kmax=7
+silList=rep(0,kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(c3,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList[i-1] = mean(ss[, 3])
+}
+silList
+```
+
