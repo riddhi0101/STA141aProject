@@ -1,0 +1,117 @@
+---
+title: "Group Clustering Karl"
+author: "Karl Jang"
+date: "12/9/2020"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(kernlab)
+library(cluster)
+library(ggplot2)
+
+setwd("C:/Users/shjan/Documents/STA 141A")
+set.seed(1)
+travel_review = read.csv("google_review_ratings.csv", header = TRUE)
+
+head(travel_review)
+error_lines= which(!is.na(travel_review$X))
+travel_review$Category.24[error_lines[1]] = travel_review$X[error_lines[1]]
+travel_review$Category.11[error_lines[2]] = 2
+travel_review[error_lines[2],13:25] = travel_review[error_lines[2],14:26]
+travel_review$Category.11 = as.numeric(travel_review$Category.11)
+review_data = travel_review[ names(travel_review) != "X"]
+if(exists('travel_review')) 
+    rm(travel_review)
+if(exists('error_lines'))
+    rm(error_lines)
+sum(!complete.cases(review_data))
+review_data = review_data %>% rename(
+        church = Category.1,
+        resort = Category.2,
+        beach = Category.3,
+        park = Category.4,
+        theatre = Category.5,
+        museum = Category.6,
+        mall = Category.7,
+        zoo = Category.8,
+        restaurant = Category.9,
+        bar = Category.10,
+        local_service = Category.11,
+        burger_pizza = Category.12,
+        hotel = Category.13,
+        juice_bars = Category.14,
+        art_galleries = Category.15,
+        dance_clubs = Category.16,
+        swimming_pool = Category.17,
+        gym = Category.18,
+        bakeries = Category.19,
+        spa = Category.20,
+        cafe = Category.21,
+        view_points = Category.22,
+        monuments = Category.23,
+        gardens = Category.24
+    )
+
+# bar, burger pizza, juice bar
+review_data %>% tidyr::gather("id", "value", 10,12) %>%
+  ggplot(., aes(juice_bars, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo1 = review_data %>% select(bar, burger_pizza, juice_bars)
+combo1 = data.matrix(combo1)
+data.mat = data.matrix(review_data)
+kmax = 7
+silList1 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo1,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList1[i-1] = mean(ss[, 3])
+}
+silList1
+
+# zoo, hotel, dance clubs
+
+review_data %>% tidyr::gather("id", "value", 8,13) %>%
+  ggplot(., aes(dance_clubs, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo2 = review_data %>% select(zoo, hotel, dance_clubs)
+combo2 = data.matrix(combo2)
+data.mat = data.matrix(review_data)
+kmax = 7
+silList2 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo2,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList2[i-1] = mean(ss[, 3])
+}
+silList2
+# bakeries, cafe, park
+
+review_data %>% tidyr::gather("id", "value", 19,21) %>%
+  ggplot(., aes(park, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo3 = review_data %>% select(bakeries, cafe, park)
+combo3 = data.matrix(combo3)
+data.mat = data.matrix(review_data)
+kmax = 7
+silList3 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo3,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    silList3[i-1] = mean(ss[, 3])
+}
+silList3
+```

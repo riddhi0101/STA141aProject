@@ -12,11 +12,65 @@ library(ggplot2)
 library(dplyr)
 review_ratings = read.csv("google_review_ratings.csv", header = TRUE)[,-1]
 
+review_ratings %>%rename(
+  church = Category.1,
+  resort = Category.2,
+  beach = Category.3,
+  park = Category.4,
+  theatre = Category.5,
+  museum = Category.6,
+  mall = Category.7,
+  zoo = Category.8,
+  restaurant = Category.9,
+  bar = Category.10,
+  local_service = Category.11,
+  burger_pizza = Category.12,
+  hotel = Category.13,
+  juice_bars = Category.14,
+  art_galleries = Category.15,
+  dance_clubs = Category.16,
+  swimming_pool = Category.17,
+  gym = Category.18,
+  bakeries = Category.19,
+  spa = Category.20,
+  cafe = Category.21,
+  view_points = Category.22,
+  monuments = Category.23,
+  gardens = Category.24
+)
 clusters.1.2 <- review_ratings %>% select(Category.1, Category.2) %>%
   dist() %>% hclust(method = "average")
 
 names(clusters.1.2)
 plot(clusters.1.2)
+
+review_ratings %>% mutate(cluster = cutree(clusters.1.2,5)) %>%
+  ggplot(aes(x=Category.1, y=Category.2, color = as.factor(cluster))) + 
+  geom_point()
+
+review_ratings %>% mutate(cluster = cutree(clusters.1.2,10)) %>%
+  ggplot(aes(x=Category.1, y=Category.2, color = as.factor(cluster))) + 
+  geom_point()
+
+cut12_5 = cutree(clusters.1.2, 5)
+
+cut12_10 = cutree(clusters.1.2, 10)
+
+plot(review_ratings, col=cut12_5)
+plot(review_ratings, col=cut12_10)
+
+c1 = matrix(review_ratings[,c(19,18,20)])
+c1 = review_ratings %>% select(Category.17, Category.18, Category.19)
+c1 = data.matrix(c1)
+
+kmax=7
+silList = rep(0,kmax-1)
+for(i in 2:kmax){
+  kmeans.out <- kmeans(data,i,nstart=50, iter.max =15)
+  ss <- silhouette(kmeans.out$cluster, dist(data.at))
+  silList[i-1] = mean(ss[,3])
+}
+silList
 
 review_ratings.all <- review_ratings %>% select(Category.1, 
                                                Category.2, 
@@ -47,6 +101,19 @@ review_ratings.all <- review_ratings %>% select(Category.1,
 clusters.all.f <- review_ratings.all %>%
   dist() %>% hclust(method = "average")
 
+cutall_5 = cutree(clusters.all.f, 5)
+
+cutall_10 = cutree(clusters.all.f, 10)
+
+plot(review_ratings, col=cutall_5)
+plot(review_ratings, col=cutall_10)
+
 names(clusters.all.f)
 plot(clusters.all.f)
+
+data.mat = data.matrix(review_ratings)
+data.mat = data.mat[-1]
+
+prcomp(data.mat, center=TRUE, scale = TRUE)
+
 ```
