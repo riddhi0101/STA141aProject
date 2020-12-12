@@ -1,0 +1,251 @@
+---
+title: "Assessing Treatment Effects of TFD725 for Non-small Cell Lung Cancer"
+output:
+  html_document:
+    df_print: paged
+    fig_caption: yes
+    number_sections: yes
+  pdf_document: default
+---
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+  }
+
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE,message=FALSE,warning=FALSE)
+```
+
+***
+
+Team ID:
+
+Name (tasks):
+
+Name (tasks):
+
+Name (tasks):
+
+Auditor (tasks):
+
+***
+
+# Introduction
+
+## Background
+
+In this portion of the project, we attempt to implement matrix completion in the google travel reviews dataset. The data includes average ratings from approximately 5000 people on 24 different catagories of attractions(spa,resort, etc)
+
+In reality, one may obtain only partial review data and would like to infer the rest to provide accurate recomendations. To similate this situation, we randomly select a portion of the data to treat as missing and then use matrix completion to predict the missing ratings. Because we have complete data, we can then compare the predictions to the true ratings. This line of analysis is inspired primarily from "Exact Matrix Completion via Convex Optimization" by Candes and Retchet as well as its application to recomendation systems done in Zhang 2006
+
+https://cims.nyu.edu/~cfgranda/pages/OBDA_fall17/notes/matrix_factorization.pdf
+
+researchgate.net/publication/220906903_Learning_from_Incomplete_Ratings_Using_Non-negative_Matrix_Factorization
+
+
+## Statistical questions of interest
+
+
+We want to complete the matrix. In doing so, we assume that the data has some low rank structure, there is some information about ratings in each row and column(ensured by random sampling), and that the matrix is incoherent. Details are specified in the following sections. 
+Then to evaluate our success, we compare our completes matrix to the whole data.
+
+
+# Analysis Plan
+
+
+- The data has 5456 observation and 24 variables
+- randomly(uniformly) sample numbers from in the range [1,130944] in vectors of length that consists 10%,25%,50%,75% of data
+- For eaach of the vectors- treat the data at that index as missing- basically gives us 4 different incomplete matrix of which 10-75% of the data is missing
+- On each matrix, complete the matrix using alternating least squares
+- evaluate the extent to which the matrix is recovered by comparing mean squared error
+
+
+
+## Statistical Analysis
+
+### Descriptive Analysis
+
+
+same as the earlier report
+
+### Matrix Completion
+
+- pose the problem of matrix completetion
+- mention what we use to solve this
+
+Let $X$ be the data matrix which is 24 by 5,426. $X_{ij}$ is the average review rating of the jth person in the ith catagory. Let $\Omega$ be the set of entries that are observed.
+Let 
+$$ P_{\Omega}(X) = \left\{
+        \begin{array}{ll}
+            X_{ij} & \quad (i,j) \in \Omega \\
+            0 & \quad otherwise
+        \end{array}
+    \right.
+  $$
+Let $Z$ be the matrix that is completed using ___ method.
+
+The objective of the matrix completion is to find a find the matrix $Z$ such that it has the smallest possible rank and the observed entries are as close to the original as possible. This can be written as follows, where $\delta$ is some small real number. 
+$$ \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F < \delta\\
+min \: \left\|Z \right\|_*$$
+Here $\left\|Z \right\|_*$ is the nuclear norm defined as follows.  $\sigma(Z)$ are the singular values of Z. The nuclear norm is used as an estimator of the rank because it is easier to minimize.
+$$
+\left\|Z \right\|_* = \sum_{k = 1}^{n} \sigma_k(Z)
+$$
+
+To solve this, we decided to use the soft impute algorithm(from https://jmlr.org/papers/volume11/mazumder10a/mazumder10a.pdf) to minimize the following funtion.
+$$
+\min_Z f_\lambda(Z) = \frac{1}{2} \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F^2 + \lambda\left\| Z\right\|_*
+$$
+
+# Results
+
+<span style="color:red">Note: </span> In this template, we present the unpolished tables and figures generated with generic `r` functions, and we skip all interpretation of the analysis results.  You can adapt any functions in this section in your report.
+
+
+## Descriptive Analysis
+
+
+<span style="color:red">Note: </span> There are many ways to automatically generate summary tables in `R`, of which many would even generate html or latex tables. In this template, we will use the package `qwraps2` as an example ([link](https://cran.r-project.org/web/packages/qwraps2/vignettes/summary-statistics.html)).
+
+```{r eval=FALSE}
+library(dplyr)
+library(tidyr)
+library(qwraps2)
+
+options(digits = 3)  
+
+set.seed(1) # Read more about RNGs with ?set.seed
+
+### Read data
+nsclc_data <- read.table("nsclc-modified.txt", header = TRUE)
+
+excluded_vars = c("ptid","tx");
+table1_summary <-  nsclc_data %>%   select(.,-one_of(excluded_vars)) %>%  qsummary(.)
+
+table1 =nsclc_data %>% group_by(.data$tx) %>%
+  summary_table(., table1_summary)
+
+rgroups =   rep(4,length(names(nsclc_data))-2)
+names(rgroups)=names(nsclc_data)[!names(nsclc_data)%in%excluded_vars]
+
+qable(table1,markup='markdown',rgroup=rgroups)
+```
+
+
+
+
+```{r eval=FALSE}
+nsclc_data.trt= nsclc_data %>% filter(tx == 1);
+nsclc_data.ctrl= nsclc_data %>% filter(tx == 0);
+table2_summary.trt <- nsclc_data.trt %>%   select("obstime","survival.past.400") %>%  qsummary(.)
+table2_summary.ctrl <- nsclc_data.ctrl %>%   select("obstime","survival.past.400") %>%  qsummary(.)
+
+table2=list();
+table2.trt=list();
+table2.ctrl=list();
+bin_list = c("europe",             "abnLDH","abnAlkphos")
+for(i_var in 1:length(bin_list)){
+(table2.trt[[i_var]] =nsclc_data.trt %>% group_by(.data[[bin_list[i_var]]]) %>% summary_table(., table2_summary.trt))
+(table2.ctrl[[i_var]] =nsclc_data.ctrl %>% group_by(.data[[bin_list[i_var]]]) %>% summary_table(., table2_summary.ctrl))
+
+table2[[i_var]] = cbind(table2.trt[[i_var]],table2.ctrl[[i_var]]);
+}
+rgroups2 =   rep(4,2)
+names(rgroups2)=c("obstime","survival.past.400")
+```
+
+<span style="color:red">Note: </span>  Draw the Kaplan-Meier curve with no adjusted variables [Link](https://rviews.rstudio.com/2017/09/25/survival-analysis-with-r/).
+
+```{r eval=FALSE}
+library(ggplot2)
+library(survival)
+library(ggfortify)
+km_fit <- survfit(Surv(obstime, death) ~ tx, data=nsclc_data)
+
+autoplot(km_fit)
+```
+
+```{r eval=FALSE}
+qable(table2[[1]],markup="markdown",rgroup=rgroups2)
+```
+
+
+```{r eval=FALSE}
+qable(table2[[2]],markup="markdown",rgroup=rgroups2)
+```
+
+
+```{r eval=FALSE}
+qable(table2[[3]],markup="markdown",rgroup=rgroups2)
+```
+
+## Inferential Analysis
+
+```{r, eval=FALSE, cache = TRUE, message=FALSE}
+library(lmtest)
+library(sandwich)
+
+nsclc_data.lm=lm(obstime~tx+europe+age+male+advdis+response+abnLDH+abnAlkphos+as.factor(ECOG),data=nsclc_data);
+
+nsclc_data.robust_lm=coeftest(nsclc_data.lm, vcov = vcovHC(nsclc_data.lm, type="HC1"))
+
+tmp=matrix(nsclc_data.robust_lm,nrow=dim(nsclc_data.robust_lm)[1],ncol=dim(nsclc_data.robust_lm)[2])
+dimnames(tmp)=dimnames(nsclc_data.robust_lm);
+
+caption_text = paste('Table 3: Results of multiple linear regression', sep='')
+knitr::kable(
+ tmp,  caption = caption_text
+)
+```
+
+
+
+```{r,eval=FALSE, message=FALSE}
+### Fit a Cox proportional hazard model
+
+nsclc_data.cox <- coxph(Surv(obstime, death) ~tx+europe+age+male+advdis+response+abnLDH+abnAlkphos+as.factor(ECOG), data = nsclc_data)
+
+sum_cox=summary(nsclc_data.cox)
+
+caption_text = paste('Table 4: Results of Cox proportional hazard model', sep='')
+knitr::kable(
+ sum_cox$coef,  caption = caption_text
+)
+```
+
+Check if adding more interactions will change results.
+
+```{r,eval=FALSE}
+
+nsclc_data.cox_int <- coxph(Surv(obstime, death) ~tx*(europe+age+male+advdis+response+abnLDH+abnAlkphos)+as.factor(ECOG), data = nsclc_data)
+
+sum_cox_int=summary(nsclc_data.cox_int)
+
+caption_text = paste('Table 5: Results of Cox proportional hazard model with interaction terms', sep='')
+knitr::kable(
+ sum_cox_int$coef,  caption = caption_text
+)
+
+```
+```{r, eval=FALSE}
+lklh_ratio=anova(nsclc_data.cox_int,nsclc_data.cox)
+
+```
+
+The likelihood ratio test for the two models yields a p-value of r lklh_ratio[[4]][2].
+
+# Mention results for extra-credit method (if any) 
+
+* Mention results for extra-credit method here
+# Discussion
+
+<span style="color:red">Note: </span> Discuss the limitations of the presented projects, and comment on how this project enlightens future research or analysis.
+
+# Session information
+```{r, eval=FALSE}
+print(sessionInfo(), local = FALSE)
+```

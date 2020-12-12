@@ -35,6 +35,7 @@ data.mat = data.mat[,-1]
 # resort, beach, spa
 # church, art galleries, monuments
 
+
 #Riddhi
 # view points, park, beach
 # theater, art galleries, cafe
@@ -76,20 +77,27 @@ review_data %>%rename(
 )
 
 c1  = review_data %>% select(gym, bakeries, swimming_pool)
-c1 = data.matrix(c1)
-ggplot(c1, aes(x=swimming_pool, y=gym)) + 
-    geom_point(aes(color=bakeries))
-
+#c1 = data.matrix(c1)
+c1  = review_data %>% select(gym, bakeries, swimming_pool)
+#c1 = data.matrix(c1)
 kmax=7
 silList=rep(0,kmax-1)
 for(i in 2:kmax){
     kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    ss <- silhouette(kmeans.out$cluster, dist(c1))
+    silList[i-1] = mean(ss[, 3])
+}
+silList
+kmax=7
+silList=rep(0,kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(c1))
     silList[i-1] = mean(ss[, 3])
 }
 silList
 
-kmeans.out <- kmeans(c1,3,nstart=50,iter.max = 15)
+kmeans.out <- kmeans(c1,2,nstart=50,iter.max = 15)
 c1 = cbind(c1,kmeans.out$cluster)
 colnames(c1)[4] <- "cluster"
 c1[,4] = as.factor(c1[,4])
@@ -102,16 +110,19 @@ ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) +
 
 # view points, park, beach
 c1  = review_data %>% select(park, view_points, beach)
-#c1 = data.matrix(c1)
+c1 = data.matrix(c1)
 ggplot(c1, aes(x=view_points, y=park)) + 
     geom_point(aes(color=beach))
 kmax=7
 silList1=rep(0,kmax-1)
 for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
+    spec <- specc(c1, centers=i,
+                  kernel = "rbfdot", kpar = "automatic")
+    ss <- silhouette(spec, dist(c1))
     silList1[i-1] = mean(ss[, 3])
 }
+#spec <- specc(c1, centers=2,
+              kernel = "rbfdot", kpar = "automatic")
 silList1
 
 # theater, art galleries, cafe
@@ -138,7 +149,7 @@ for(i in 2:kmax){
 }
 silList3
 
-
+## jsut 2 ignore
 c1  = review_data %>% select(beach,art_galleries)
 c1 = data.matrix(c1)
 kmax=7
@@ -150,6 +161,34 @@ for(i in 2:kmax){
 }
 silList4
 
+
+
+#8,2,10
+c1  = review_data %>% select(Category.8,Category.2,Category.10)
+c1 = data.matrix(c1)
+kmax=7
+silList4=rep(0,kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+    ss <- silhouette(kmeans.out$cluster, dist(c1))
+    silList4[i-1] = mean(ss[, 3])
+}
+silList4
+
+
+#24,18,20
+#16,5,20
+#2,19,8
+#15,10,19
+#22,6,12
+
+
+
+
+
+
+
+## plotting
 scatterplot3d(c1, pch = 16, angle = )
 
 ggplot(c1, aes(x=gym, y=bakeries)) + 
