@@ -63,14 +63,14 @@ review_data %>% tidyr::gather("id", "value", 10,12) %>%
   geom_smooth(color = "blue")
 
 combo1 = review_data %>% select(bar, burger_pizza, juice_bars)
-combo1 = data.matrix(combo1)
-data.mat = data.matrix(review_data)
+#combo1 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
 kmax = 7
 silList1 = rep(0, kmax-1)
 for(i in 2:kmax){
     kmeans.out <- kmeans(combo1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList1[i-1] = mean(ss[, 3])
+    ss1 <- silhouette(kmeans.out$cluster, dist(combo1))
+    silList1[i-1] = mean(ss1[, 3])
 }
 silList1
 
@@ -84,16 +84,17 @@ review_data %>% tidyr::gather("id", "value", 8,13) %>%
   geom_smooth(color = "blue")
 
 combo2 = review_data %>% select(zoo, hotel, dance_clubs)
-combo2 = data.matrix(combo2)
-data.mat = data.matrix(review_data)
+#combo2 = data.matrix(combo2)
+#data.mat = data.matrix(review_data)
 kmax = 7
 silList2 = rep(0, kmax-1)
 for(i in 2:kmax){
     kmeans.out <- kmeans(combo2,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList2[i-1] = mean(ss[, 3])
+    ss2 <- silhouette(kmeans.out$cluster, dist(combo2))
+    silList2[i-1] = mean(ss2[, 3])
 }
 silList2
+
 # bakeries, cafe, park
 
 review_data %>% tidyr::gather("id", "value", 19,21) %>%
@@ -104,14 +105,140 @@ review_data %>% tidyr::gather("id", "value", 19,21) %>%
   geom_smooth(color = "blue")
 
 combo3 = review_data %>% select(bakeries, cafe, park)
-combo3 = data.matrix(combo3)
-data.mat = data.matrix(review_data)
+#combo3 = data.matrix(combo3)
+#data.mat = data.matrix(review_data)
 kmax = 7
 silList3 = rep(0, kmax-1)
 for(i in 2:kmax){
     kmeans.out <- kmeans(combo3,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList3[i-1] = mean(ss[, 3])
+    ss3 <- silhouette(kmeans.out$cluster, dist(combo3))
+    silList3[i-1] = mean(ss3[, 3])
 }
 silList3
+
+#gardens, resort, swimming_pool 24, 2, 17
+
+review_data %>% tidyr::gather("id", "value", 24,2) %>%
+  ggplot(., aes(swimming_pool, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo4 = review_data %>% select(gardens, resort, swimming_pool)
+#combo4 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList4 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo4,i,nstart=50,iter.max = 15)
+    ss4 <- silhouette(kmeans.out$cluster, dist(combo4))
+    silList4[i-1] = mean(ss4[, 3])
+}
+silList4
+
+#restaurant, theatre, bakeries 9,5,19
+
+review_data %>% tidyr::gather("id", "value", 9,5) %>%
+  ggplot(., aes(bakeries, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo5 = review_data %>% select(restaurant, theatre, bakeries)
+#combo5 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList5 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo5,i,nstart=50,iter.max = 15)
+    ss5 <- silhouette(kmeans.out$cluster, dist(combo5))
+    silList5[i-1] = mean(ss5[, 3])
+}
+silList5
+
+#museum, spa, art_galleries 6,20,15
+
+review_data %>% tidyr::gather("id", "value", 6,20) %>%
+  ggplot(., aes(art_galleries, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo6 = review_data %>% select(museum, spa, art_galleries)
+#combo6 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList6 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo6,i,nstart=50,iter.max = 15)
+    ss6 <- silhouette(kmeans.out$cluster, dist(combo6))
+    silList6[i-1] = mean(ss6[, 3])
+}
+silList6
+
+#park, burger_pizza, church 4,12,1
+
+review_data %>% tidyr::gather("id", "value", 4,12) %>%
+  ggplot(., aes(church, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo7 = review_data %>% select(park, burger_pizza, church)
+#combo7 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList7 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo7,i,nstart=50,iter.max = 15)
+    ss7 <- silhouette(kmeans.out$cluster, dist(combo7))
+    silList7[i-1] = mean(ss7[, 3])
+}
+silList7
+
+#dance_clubs, monuments, museum 16,23,6
+
+review_data %>% tidyr::gather("id", "value", 16,23) %>%
+  ggplot(., aes(museum, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo8 = review_data %>% select(dance_clubs, monuments, museum)
+#combo8 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList8 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo8,i,nstart=50,iter.max = 15)
+    ss8 <- silhouette(kmeans.out$cluster, dist(combo8))
+    silList8[i-1] = mean(ss8[, 3])
+}
+silList8
+
+#art_galleries, gym, bar 15,18,10
+
+review_data %>% tidyr::gather("id", "value", 15,18) %>%
+  ggplot(., aes(bar, value)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  facet_wrap(~id) +
+  geom_smooth(color = "blue")
+
+combo9 = review_data %>% select(art_galleries, gym, bar)
+#combo9 = data.matrix(combo1)
+#data.mat = data.matrix(review_data)
+kmax = 7
+silList9 = rep(0, kmax-1)
+for(i in 2:kmax){
+    kmeans.out <- kmeans(combo9,i,nstart=50,iter.max = 15)
+    ss9 <- silhouette(kmeans.out$cluster, dist(combo9))
+    silList9[i-1] = mean(ss9[, 3])
+}
+silList9
 ```
