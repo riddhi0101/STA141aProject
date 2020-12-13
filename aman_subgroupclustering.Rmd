@@ -110,8 +110,8 @@ s10$highC
 
 #three lowest
 s1$highC
-s8$highC
 s7$highC
+s8$highC
 #three highest
 s2$highC
 s10$highC
