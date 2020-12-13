@@ -79,23 +79,23 @@ ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) +
 
 
 s1 = subClustering("view_points", "park", "beach", review_data)
-which(s1 == max(s1))
+
 s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
-which(s2 == max(s2))
+
 s3 = subClustering("restaurant", "bar", "local_service", review_data)
-which(s3 == max(s3))
+
 s4 = subClustering("gardens", "gym", "spa", review_data)
-which(s4 == max(s4))
+
 s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
-which(s5 == max(s5))
+
 s6 = subClustering("resort", "bakeries", "zoo", review_data)
-which(s6 == max(s6))
+
 s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
-which(s7 == max(s7))
+
 s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
-which(s8 == max(s8))
+
 s9 = subClustering("zoo", "resort", "bar", review_data)
-which(s9 == max(s9))
+
 
 
 

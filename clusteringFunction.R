@@ -5,6 +5,8 @@ library(dplyr)
 library(kernlab)
 library(cluster)
 library(ggplot2)
+library(scatterplot3d)
+
 ## project prelims
 setwd("/Users/riddhib/Desktop/fall2020/STA_141a/final")
 travel_review <- read.csv("./google_review_ratings.csv", stringsAsFactors=FALSE)
@@ -71,8 +73,8 @@ subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
     c1 = cbind(c1,kmeans.out$cluster)
     colnames(c1)[4] <- "cluster"
     c1[,4] = as.factor(c1[,4])
-    scatterplot3d(c1[,1:3], pch = 16, angle = 55, color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
-    return(list(silList = silList, datamat = c1, plot = a, highC = a))
+    plot = scatterplot3d(c1[,1:3], pch = 16, angle = 55, color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+    return(list(silList = silList, datamat = c1, plot = a, highC = silList[a]))
 }
 
 
