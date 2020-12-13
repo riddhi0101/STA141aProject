@@ -77,24 +77,25 @@ ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) +
     geom_point(aes(color=bakeries))
 
 
-
+silInds = c()
 s1 = subClustering("view_points", "park", "beach", review_data)
-
+silInds = append(silInds, s1$highC)
 s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
-
+silInds = append(silInds, s2$highC)
 s3 = subClustering("restaurant", "bar", "local_service", review_data)
-
+silInds = append(silInds, s3$highC)
 s4 = subClustering("gardens", "gym", "spa", review_data)
-
+silInds = append(silInds, s4$highC)
 s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
-
+silInds = append(silInds, s5$highC)
 s6 = subClustering("resort", "bakeries", "zoo", review_data)
-
+silInds = append(silInds, s6$highC)
 s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
-
+silInds = append(silInds, s7$highC)
 s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
-
+silInds = append(silInds, s8$highC)
 s9 = subClustering("zoo", "resort", "bar", review_data)
+silInds = append(silInds, s9$highC)
 
 
 

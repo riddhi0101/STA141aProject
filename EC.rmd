@@ -109,7 +109,6 @@ $$
 ## Descriptive Analysis
 
 
-<span style="color:red">Note: </span> There are many ways to automatically generate summary tables in `R`, of which many would even generate html or latex tables. In this template, we will use the package `qwraps2` as an example ([link](https://cran.r-project.org/web/packages/qwraps2/vignettes/summary-statistics.html)).
 
 ```{r eval=FALSE}
 library(dplyr)
@@ -185,65 +184,16 @@ qable(table2[[3]],markup="markdown",rgroup=rgroups2)
 
 ## Inferential Analysis
 
-```{r, eval=FALSE, cache = TRUE, message=FALSE}
-library(lmtest)
-library(sandwich)
+Lambda by error plot:
 
-nsclc_data.lm=lm(obstime~tx+europe+age+male+advdis+response+abnLDH+abnAlkphos+as.factor(ECOG),data=nsclc_data);
 
-nsclc_data.robust_lm=coeftest(nsclc_data.lm, vcov = vcovHC(nsclc_data.lm, type="HC1"))
-
-tmp=matrix(nsclc_data.robust_lm,nrow=dim(nsclc_data.robust_lm)[1],ncol=dim(nsclc_data.robust_lm)[2])
-dimnames(tmp)=dimnames(nsclc_data.robust_lm);
-
-caption_text = paste('Table 3: Results of multiple linear regression', sep='')
-knitr::kable(
- tmp,  caption = caption_text
-)
-```
+The optimal value for lambda is _ and the error is __. In reality, in a matrix completion problem, you wouldnt know the ground truth. Then, to pick a lambda, one should treat a subset of values of the incomplete matrix as missing. This would allow you to validate the lambda that you pick to see if the matrix completion generalizes well 
 
 
 
-```{r,eval=FALSE, message=FALSE}
-### Fit a Cox proportional hazard model
-
-nsclc_data.cox <- coxph(Surv(obstime, death) ~tx+europe+age+male+advdis+response+abnLDH+abnAlkphos+as.factor(ECOG), data = nsclc_data)
-
-sum_cox=summary(nsclc_data.cox)
-
-caption_text = paste('Table 4: Results of Cox proportional hazard model', sep='')
-knitr::kable(
- sum_cox$coef,  caption = caption_text
-)
-```
-
-Check if adding more interactions will change results.
-
-```{r,eval=FALSE}
-
-nsclc_data.cox_int <- coxph(Surv(obstime, death) ~tx*(europe+age+male+advdis+response+abnLDH+abnAlkphos)+as.factor(ECOG), data = nsclc_data)
-
-sum_cox_int=summary(nsclc_data.cox_int)
-
-caption_text = paste('Table 5: Results of Cox proportional hazard model with interaction terms', sep='')
-knitr::kable(
- sum_cox_int$coef,  caption = caption_text
-)
-
-```
-```{r, eval=FALSE}
-lklh_ratio=anova(nsclc_data.cox_int,nsclc_data.cox)
-
-```
 
 The likelihood ratio test for the two models yields a p-value of r lklh_ratio[[4]][2].
 
-# Mention results for extra-credit method (if any) 
-
-* Mention results for extra-credit method here
-# Discussion
-
-<span style="color:red">Note: </span> Discuss the limitations of the presented projects, and comment on how this project enlightens future research or analysis.
 
 # Session information
 ```{r, eval=FALSE}
