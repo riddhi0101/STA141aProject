@@ -66,13 +66,17 @@ review_data = review_data %>% rename(
 #15,10,19
 #22,6,12
 #8,2,10
+c1  = review_data %>% select(gym, swimming_pool, bakeries)
 
-kmeans.out <- kmeans(c1,2,nstart=50,iter.max = 15)
+kmeans.out <- kmeans(c1,3,nstart=50,iter.max = 15)
 c1 = cbind(c1,kmeans.out$cluster)
 colnames(c1)[4] <- "cluster"
 c1[,4] = as.factor(c1[,4])
+scatterplot3d(c1[,1:3], pch = 16, angle = 55, color = c1[,4])
 ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) + 
     geom_point(aes(color=bakeries))
+
+
 
 s1 = subClustering("view_points", "park", "beach", review_data)
 which(s1 == max(s1))
@@ -99,7 +103,7 @@ which(s9 == max(s9))
 
 
 ## plotting
-scatterplot3d(c1, pch = 16, angle = )
+scatterplot3d(c1, pch = 16, angle = 55)
 
 ggplot(c1, aes(x=gym, y=bakeries)) + 
     geom_point(aes(size=swimming_pool))
