@@ -4,6 +4,7 @@ library("scatterplot3d")
 library(dplyr)
 library(kernlab)
 library(cluster)
+library(ggplot2)
 ## project prelims
 setwd("/Users/riddhib/Desktop/fall2020/STA_141a/final")
 travel_review <- read.csv("./google_review_ratings.csv", stringsAsFactors=FALSE)
@@ -65,9 +66,16 @@ subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
         ss <- silhouette(kmeans.out$cluster, dist(c1))
         silList[i-1] = mean(ss[, 3])
     }
-    return(silList)
+    a = which(silList == max(silList)) + 1
+    kmeans.out <- kmeans(c1,a,nstart=50,iter.max = 15)
+    c1 = cbind(c1,kmeans.out$cluster)
+    colnames(c1)[4] <- "cluster"
+    c1[,4] = as.factor(c1[,4])
+    a = ggplot(c1, aes(x=cat1, y=cat2, shape = cluster)) + 
+        geom_point(aes(color=cat3))
+    return(list(silList = silList, datamat = c1, plot = a))
 }
 
 
-subClustering('gym','park','mall',review_data)
-
+ss = subClustering('gym','park','mall',review_data)
+ss$plot

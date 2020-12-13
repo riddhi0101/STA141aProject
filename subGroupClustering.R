@@ -25,77 +25,47 @@ if(exists('travel_review'))
 if(exists('error_lines'))
     rm(error_lines)
 
+review_data = review_data %>% rename(
+    church = Category.1,
+    resort = Category.2,
+    beach = Category.3,
+    park = Category.4,
+    theatre = Category.5,
+    museum = Category.6,
+    mall = Category.7,
+    zoo = Category.8,
+    restaurant = Category.9,
+    bar = Category.10,
+    local_service = Category.11,
+    burger_pizza = Category.12,
+    hotel = Category.13,
+    juice_bars = Category.14,
+    art_galleries = Category.15,
+    dance_clubs = Category.16,
+    swimming_pool = Category.17,
+    gym = Category.18,
+    bakeries = Category.19,
+    spa = Category.20,
+    cafe = Category.21,
+    view_points = Category.22,
+    monuments = Category.23,
+    gardens = Category.24
+)
 
-data.mat = data.matrix(review_data)
-data.mat = data.mat[,-1]
 
-## feature combinations
-#aman
-# gym, swimming pools, bakeries
-# resort, beach, spa
-# church, art galleries, monuments
+#data.mat = data.matrix(review_data)
+#data.mat = data.mat[,-1]
 
 
-#Riddhi
 # view points, park, beach
 # theater, art galleries, cafe
 # restaurants, bar, local service
-
-#karl
-# bar, burger pizza, juice bar
-# zoo, hotel, dance clubs
-# bakeries, cafe, park
-
-
-
-
-review_data %>%rename(
-    avg_church = Category.1,
-    avg_resort = Category.2,
-    avg_beach = Category.3,
-    avg_park = Category.4,
-    avg_theatre = Category.5,
-    avg_museum = Category.6,
-    avg_mall = Category.7,
-    avg_zoo = Category.8,
-    avg_restaurant = Category.9,
-    avg_bar = Category.10,
-    avg_local_service = Category.11,
-    avg_burger_pizza = Category.12,
-    avg_hotel = Category.13,
-    avg_juice_bars = Category.14,
-    avg_art_galleries = Category.15,
-    avg_dance_clubs = Category.16,
-    avg_swimming_pool = Category.17,
-    avg_gym = Category.18,
-    avg_bakeries = Category.19,
-    avg_spa = Category.20,
-    avg_cafe = Category.21,
-    avg_view_points = Category.22,
-    avg_monuments = Category.23,
-    avg_gardens = Category.24
-)
-
-c1  = review_data %>% select(gym, bakeries, swimming_pool)
-#c1 = data.matrix(c1)
-c1  = review_data %>% select(gym, bakeries, swimming_pool)
-#c1 = data.matrix(c1)
-kmax=7
-silList=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(c1))
-    silList[i-1] = mean(ss[, 3])
-}
-silList
-kmax=7
-silList=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(c1))
-    silList[i-1] = mean(ss[, 3])
-}
-silList
+#24,18,20
+#16,5,20
+#2,19,8
+#15,10,19
+#22,6,12
+#8,2,10
 
 kmeans.out <- kmeans(c1,2,nstart=50,iter.max = 15)
 c1 = cbind(c1,kmeans.out$cluster)
@@ -104,84 +74,24 @@ c1[,4] = as.factor(c1[,4])
 ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) + 
     geom_point(aes(color=bakeries))
 
-
-
-
-
-# view points, park, beach
-c1  = review_data %>% select(park, view_points, beach)
-c1 = data.matrix(c1)
-ggplot(c1, aes(x=view_points, y=park)) + 
-    geom_point(aes(color=beach))
-kmax=7
-silList1=rep(0,kmax-1)
-for(i in 2:kmax){
-    spec <- specc(c1, centers=i,
-                  kernel = "rbfdot", kpar = "automatic")
-    ss <- silhouette(spec, dist(c1))
-    silList1[i-1] = mean(ss[, 3])
-}
-#spec <- specc(c1, centers=2,
-              kernel = "rbfdot", kpar = "automatic")
-silList1
-
-# theater, art galleries, cafe
-c1  = review_data %>% select(theatre, art_galleries, cafe)
-c1 = data.matrix(c1)
-kmax=7
-silList2=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList2[i-1] = mean(ss[, 3])
-}
-silList2
-
-# restaurants, bar, local service
-c1  = review_data %>% select(restaurant, bar, local_service)
-c1 = data.matrix(c1)
-kmax=7
-silList3=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList3[i-1] = mean(ss[, 3])
-}
-silList3
-
-## jsut 2 ignore
-c1  = review_data %>% select(beach,art_galleries)
-c1 = data.matrix(c1)
-kmax=7
-silList4=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList4[i-1] = mean(ss[, 3])
-}
-silList4
-
-
-
-#8,2,10
-c1  = review_data %>% select(Category.8,Category.2,Category.10)
-c1 = data.matrix(c1)
-kmax=7
-silList4=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(c1))
-    silList4[i-1] = mean(ss[, 3])
-}
-silList4
-
-
-#24,18,20
-#16,5,20
-#2,19,8
-#15,10,19
-#22,6,12
-
+s1 = subClustering("view_points", "park", "beach", review_data)
+which(s1 == max(s1))
+s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
+which(s2 == max(s2))
+s3 = subClustering("restaurant", "bar", "local_service", review_data)
+which(s3 == max(s3))
+s4 = subClustering("gardens", "gym", "spa", review_data)
+which(s4 == max(s4))
+s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
+which(s5 == max(s5))
+s6 = subClustering("resort", "bakeries", "zoo", review_data)
+which(s6 == max(s6))
+s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
+which(s7 == max(s7))
+s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
+which(s8 == max(s8))
+s9 = subClustering("zoo", "resort", "bar", review_data)
+which(s9 == max(s9))
 
 
 
