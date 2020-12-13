@@ -2,10 +2,15 @@
 title: "GROUP CLUSTERING AMAN"
 output: html_notebook
 ---
+
 ```{r}
+## grouping clustering function
+
+library("scatterplot3d")
 library(dplyr)
 library(kernlab)
 library(cluster)
+library(ggplot2)
 ## project prelims
 travel_review <- read.csv("~/Desktop/Statistics/google_review_ratings.csv")
 head(travel_review)
@@ -27,84 +32,87 @@ if(exists('travel_review'))
 if(exists('error_lines'))
     rm(error_lines)
 
-# check to see that all observations are complete
-sum(!complete.cases(review_data))
-#pairs(review_data[,2:25],pch = 19, lower.panel = NULL)
-?pairs
-
-## feature combinations
-#aman
-# gym, swimming pools, bakeries
-# resort, beach, spa
-# church, art galleries, monuments
-
-#Riddhi
-# view points, park, beach
-# theater, art galleries, cafe
-# restaurants, bar, local service
-
-#karl
-# bar, burger pizza, juice bar
-# zoo, hotel, dance clubs
-# bakeries, cafe, park
-
-
-
-
 review_data = review_data %>% rename(
-        church = Category.1,
-        resort = Category.2,
-        beach = Category.3,
-        park = Category.4,
-        theatre = Category.5,
-        museum = Category.6,
-        mall = Category.7,
-        zoo = Category.8,
-        restaurant = Category.9,
-        bar = Category.10,
-        local_service = Category.11,
-        burger_pizza = Category.12,
-        hotel = Category.13,
-        juice_bars = Category.14,
-        art_galleries = Category.15,
-        dance_clubs = Category.16,
-        swimming_pool = Category.17,
-        gym = Category.18,
-        bakeries = Category.19,
-        spa = Category.20,
-        cafe = Category.21,
-        view_points = Category.22,
-        monuments = Category.23,
-        gardens = Category.24
-    )
+    church = Category.1,
+    resort = Category.2,
+    beach = Category.3,
+    park = Category.4,
+    theatre = Category.5,
+    museum = Category.6,
+    mall = Category.7,
+    zoo = Category.8,
+    restaurant = Category.9,
+    bar = Category.10,
+    local_service = Category.11,
+    burger_pizza = Category.12,
+    hotel = Category.13,
+    juice_bars = Category.14,
+    art_galleries = Category.15,
+    dance_clubs = Category.16,
+    swimming_pool = Category.17,
+    gym = Category.18,
+    bakeries = Category.19,
+    spa = Category.20,
+    cafe = Category.21,
+    view_points = Category.22,
+    monuments = Category.23,
+    gardens = Category.24
+)
+
 ```
 ```{r}
-# gym, swimming pools, bakeries
-library(ggplot2)
-```
-```{r}
+## input arguments: 3 catagories to cluster, whole data frame, kmax(there is a default)
+## output: list of the silhouette index for 2-7 clustering
+subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
+    c1  = datac %>% select(cat1, cat2, cat3)
+    #c1 = data.matrix(c1)
+    
+    silList=rep(0,kmax-1)
+    for(i in 2:kmax){
+        kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+        ss <- silhouette(kmeans.out$cluster, dist(c1))
+        silList[i-1] = mean(ss[, 3])
+    }
+    return(silList)
+}
+
+
+
+subClustering('gym','park','mall',review_data)
+subClustering('gym','swimming_pool','bakeries',review_data)
+subClustering('resort','beach','spa',review_data)
+subClustering('church','art_galleries','monuments',review_data)
+subClustering('gardens','hotel','monuments',review_data)
+subClustering('bar','gym','local_service',review_data)
+subClustering('theatre','view_points','museum',review_data)
+subClustering('theatre','museum','restaurant',review_data)
+subClustering('hotel','art_galleries','gardens',review_data)
+subClustering('art_galleries','monuments','gardens',review_data)
+
 # gym, swimming pools, bakeries
 review_data %>% tidyr::gather("id", "value", 18:19) %>% 
   ggplot(., aes(bakeries,value))+
   geom_point()+
-  geom_smooth(method = "lm", se=FALSE, color="blue")+
-  facet_wrap(~id)+
-  geom_smooth(color = "green")
-  
-c1  = review_data %>% select(gym,swimming_pool,bakeries)
-c1 = data.matrix(c1)
-data.mat = data.matrix(review_data)
-kmax=7
-silList=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList[i-1] = mean(ss[, 3])
-}
-silList
+  facet_wrap(~id)
 
+# resort, beach, spa
+review_data %>% tidyr::gather("id", "value", 2:3) %>% 
+  ggplot(., aes(spa,value))+
+  geom_point()+
+  facet_wrap(~id)
+
+#church, art galleries, monuments
+review_data %>% tidyr::gather("id", "value", c(2,16)) %>% 
+  ggplot(., aes(monuments,value))+
+  geom_point()+
+  facet_wrap(~id)
 
 ```
+
+
+
+
+
 ```{r}
 # resort, beach, spa
 review_data %>% tidyr::gather("id", "value", 2:3) %>% 
@@ -115,15 +123,21 @@ review_data %>% tidyr::gather("id", "value", 2:3) %>%
   geom_smooth(color = "green")
 
 c2  = review_data %>% select(resort,beach,spa)
-c2 = data.matrix(c2)
-kmax=7
-silList=rep(0,kmax-1)
-for(i in 2:kmax){
-    kmeans.out <- kmeans(c2,i,nstart=50,iter.max = 15)
-    ss <- silhouette(kmeans.out$cluster, dist(data.mat))
-    silList[i-1] = mean(ss[, 3])
+subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
+    c1  = datac %>% select(cat1, cat2, cat3)
+    #c1 = data.matrix(c1)
+    
+    silList=rep(0,kmax-1)
+    for(i in 2:kmax){
+        kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+        ss <- silhouette(kmeans.out$cluster, dist(c1))
+        silList[i-1] = mean(ss[, 3])
+    }
+    return(silList)
 }
-silList
+
+
+subClustering('gym','park','mall',review_data)
 
 ```
 ```{r}
