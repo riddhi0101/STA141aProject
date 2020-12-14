@@ -57,9 +57,17 @@ review_data = review_data %>% rename(
 
 
 ## DESCRIPTIVE ANALYSIS
+library(reshape2)
+data = data.matrix(review_data)
+data = data[,-1]
+corM <- cor(data)
+melted_cormat <- melt(corM)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                                       name="Pearson\nCorrelation") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,  size = 8, hjust = 1))
 
-
-table1_summary <-  review_data %>%  qsummary(.)
 
 
 subClustering <- function(cat1,cat2,cat3,datac,kmax = 7, angleI = 55){
@@ -176,3 +184,17 @@ plot = scatterplot3d(h3data[,1:3], pch = 16, angle = 137,
 low1 = subClustering("zoo", "resort", "bar", review_data)
 low2 = subClustering('park', 'burger_pizza', 'church', review_data)
 low3 = subClustering("resort", "bakeries", "zoo", review_data)
+
+
+
+
+library(reshape2)
+data = data.matrix(review_data)
+data = data[,-1]
+corM <- cor(data)
+melted_cormat <- melt(corM)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                                       name="Pearson\nCorrelation") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,  size = 8, hjust = 1))
