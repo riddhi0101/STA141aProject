@@ -67,6 +67,9 @@ as9$highC
 
 #Combos to include in the report
 high1 = subClustering('gym','swimming_pool','bakeries',review_data)
+h1data = high1$datamat
+plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 115, 
+                     color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
 high2 = subClustering("gardens", "gym", "spa", review_data)
 high3 = subClustering('art_galleries','monuments','gardens',review_data)
 

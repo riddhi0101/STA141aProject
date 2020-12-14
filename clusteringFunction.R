@@ -58,7 +58,7 @@ review_data = review_data %>% rename(
 
 ## input arguements: 3 catagories to cluster, wholw data frame, kmax(there is a default)
 ## output: list of the silhoutte index for 2-7 clusterings
-subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
+subClustering <- function(cat1,cat2,cat3,datac,kmax = 7, angleI = 55){
     c1  = datac %>% select(cat1, cat2, cat3)
     #c1 = data.matrix(c1)
     
@@ -73,7 +73,7 @@ subClustering <- function(cat1,cat2,cat3,datac,kmax = 7){
     c1 = cbind(c1,kmeans.out$cluster)
     colnames(c1)[4] <- "cluster"
     c1[,4] = as.factor(c1[,4])
-    plot = scatterplot3d(c1[,1:3], pch = 16, angle = 55, color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+    plot = scatterplot3d(c1[,1:3], pch = 16, angle = angleI , color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
     return(list(silList = silList, datamat = c1, plot = a, highC = silList[a-1]))
 }
 
