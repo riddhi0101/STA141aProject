@@ -33,51 +33,88 @@ Name (tasks):
 Auditor (tasks):
 
 ***
+```{r}
+library("scatterplot3d")
+library(dplyr)
+library(tidyr)
+library(qwraps2)
+library(kernlab)
+library(cluster)
+library(filling)
+## project prelims
+setwd("/Users/riddhib/Desktop/fall2020/STA_141a/final")
+travel_review <- read.csv("./google_review_ratings.csv", stringsAsFactors=FALSE)
+## correcting for errors
+error_lines= which(!is.na(travel_review$X))
+# One line has Category.24 misplaced at another column
+travel_review$Category.24[error_lines[1]] = travel_review$X[error_lines[1]]
+# One line has put a character value at Category.11. Correct it to 2.  
+travel_review$Category.11[error_lines[2]] = 2
+# The line misplaced all columns after Category.12.
+travel_review[error_lines[2],13:25] = travel_review[error_lines[2],14:26]
+# Change Category.11 to numeric 
+travel_review$Category.11 = as.numeric(travel_review$Category.11)
+# Delete an extra column  
+review_data = travel_review[ names(travel_review) != "X"]
+# Delete the temporary variables/data
+if(exists('travel_review')) 
+    rm(travel_review)
+if(exists('error_lines'))
+    rm(error_lines)
 
+review_data = review_data %>% rename(
+    church = Category.1,
+    resort = Category.2,
+    beach = Category.3,
+    park = Category.4,
+    theatre = Category.5,
+    museum = Category.6,
+    mall = Category.7,
+    zoo = Category.8,
+    restaurant = Category.9,
+    bar = Category.10,
+    local_service = Category.11,
+    burger_pizza = Category.12,
+    hotel = Category.13,
+    juice_bars = Category.14,
+    art_galleries = Category.15,
+    dance_clubs = Category.16,
+    swimming_pool = Category.17,
+    gym = Category.18,
+    bakeries = Category.19,
+    spa = Category.20,
+    cafe = Category.21,
+    view_points = Category.22,
+    monuments = Category.23,
+    gardens = Category.24
+)
+
+```
 # Introduction
 
 ## Background
 
 In this portion of the project, we attempt to implement matrix completion in the google travel reviews dataset. The data includes average ratings from approximately 5000 people on 24 different catagories of attractions(spa,resort, etc)
 
-In reality, one may obtain only partial review data and would like to infer the rest to provide accurate recomendations. To similate this situation, we randomly select a portion of the data to treat as missing and then use matrix completion to predict the missing ratings. Because we have complete data, we can then compare the predictions to the true ratings. This line of analysis is inspired primarily from "Exact Matrix Completion via Convex Optimization" by Candes and Retchet as well as its application to recomendation systems done in Zhang 2006
+In reality, one may obtain only partial review data and would like to infer the rest to provide accurate recomendations. To similate this situation, we randomly select a portion of the data to treat as missing and then use matrix completion to predict the missing ratings. Because we have complete data, we can then compare the predictions to the true ratings. This line of analysis is inspired primarily from "Exact Matrix Completion via Convex Optimization" by Candes and Retchet. To do the actual computation, we use the soft impute algorithm(Mazumder, 2010).
 
-https://cims.nyu.edu/~cfgranda/pages/OBDA_fall17/notes/matrix_factorization.pdf
+Citations:
 
-researchgate.net/publication/220906903_Learning_from_Incomplete_Ratings_Using_Non-negative_Matrix_Factorization
-
+Candès, E.J., Recht, B. Exact Matrix Completion via Convex Optimization. Found Comput Math 9, 717 (2009). https://doi.org/10.1007/s10208-009-9045-5
+Mazumder, Rahul & Hastie, Trevor & Tibshirani, Robert. (2010). Spectral Regularization Algorithms for Learning Large Incomplete Matrices. Journal of machine learning research : JMLR. 11. 2287-2322.
 
 ## Statistical questions of interest
 
 
-We want to complete the matrix. In doing so, we assume that the data has some low rank structure, there is some information about ratings in each row and column(ensured by random sampling), and that the matrix is incoherent. Details are specified in the following sections. 
-Then to evaluate our success, we compare our completes matrix to the whole data.
+We want to complete the matrix. In doing so, we assume that the data has some low rank structure, there is some information about ratings in each row and column(ensured by random sampling), and that the matrix is incoherent. These conditions are requirements for the completion problem to be well posed(Candes 2008). Then to evaluate our success, we compare our completes matrix to the whole data.
 
 
 # Analysis Plan
 
 
-- The data has 5456 observation and 24 variables
-- randomly(uniformly) sample numbers from in the range [1,130944] in vectors of length that consists 10%,25%,50%,75% of data
-- For eaach of the vectors- treat the data at that index as missing- basically gives us 4 different incomplete matrix of which 10-75% of the data is missing
-- On each matrix, complete the matrix using alternating least squares
-- evaluate the extent to which the matrix is recovered by comparing mean squared error
-
-
-
-## Statistical Analysis
-
-### Descriptive Analysis
-
-
-same as the earlier report
-
 ### Matrix Completion
 
-- pose the problem of matrix completetion
-- mention what we use to solve this
-
-Let $X$ be the data matrix which is 24 by 5,426. $X_{ij}$ is the average review rating of the jth person in the ith catagory. Let $\Omega$ be the set of entries that are observed.
+Let $X$ be the data matrix which is 24 by 5,426 (5427 users and 24 categories reviewd). $X_{ij}$ is the average review rating of the jth person in the ith catagory. Let $\Omega$ be the set of entries that are observed.This set is created by randomly sampling points to treat as observed from the full matrix $X$.
 Let 
 $$ P_{\Omega}(X) = \left\{
         \begin{array}{ll}
@@ -86,7 +123,7 @@ $$ P_{\Omega}(X) = \left\{
         \end{array}
     \right.
   $$
-Let $Z$ be the matrix that is completed using ___ method.
+Let $Z$ be the matrix that is completed using soft impute method.
 
 The objective of the matrix completion is to find a find the matrix $Z$ such that it has the smallest possible rank and the observed entries are as close to the original as possible. This can be written as follows, where $\delta$ is some small real number. 
 $$ \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F < \delta\\
@@ -96,103 +133,124 @@ $$
 \left\|Z \right\|_* = \sum_{k = 1}^{n} \sigma_k(Z)
 $$
 
-To solve this, we decided to use the soft impute algorithm(from https://jmlr.org/papers/volume11/mazumder10a/mazumder10a.pdf) to minimize the following funtion.
+To solve this, we decided to use the soft impute algorithm (Mazumderet al.) to minimize the following funtion. It essentially uses soft thresholding to solve the objective function specified above.
+
+
 $$
 \min_Z f_\lambda(Z) = \frac{1}{2} \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F^2 + \lambda\left\| Z\right\|_*
 $$
+To choose the hyperparameter, we run soft impute on the following list (1,6,11...,101). Then we calculate the for frobenius norm of the residual as shown below. We chose the lambda values which results in the smallest value for the residual because it gives the matrix that is closest to the original. 
+$$
+total\:residual = \left\|Z-X\right\|_F
+$$
+In reality, in a matrix completion problem, you wouldnt know the ground truth. Then, to pick a lambda, one should treat a subset of values of the incomplete matrix as missing (creating a train/test set). This would allow you to validate the lambda that you pick to see ensure the matrix completion generalizes well.
 
+To look more closely at our completed matrix, we calculate partitions of the residuals in the following ways
+
+$$
+observed \: residual = \left\|P_\Omega(Z) - P_\Omega(X) \right\|_F \\
+unobserved \: residual = \left\|P_{\notin \Omega} (Z) - P_{\notin \Omega}(X) \right\|_F 
+$$
+
+
+Citations:
+Mazumder, Rahul & Hastie, Trevor & Tibshirani, Robert. (2010). Spectral Regularization Algorithms for Learning Large Incomplete Matrices. Journal of machine learning research : JMLR. 11. 2287-2322. 
 # Results
 
-<span style="color:red">Note: </span> In this template, we present the unpolished tables and figures generated with generic `r` functions, and we skip all interpretation of the analysis results.  You can adapt any functions in this section in your report.
-
-
-## Descriptive Analysis
-
-
-
-```{r eval=FALSE}
-library(dplyr)
-library(tidyr)
-library(qwraps2)
-
-options(digits = 3)  
-
-set.seed(1) # Read more about RNGs with ?set.seed
-
-### Read data
-nsclc_data <- read.table("nsclc-modified.txt", header = TRUE)
-
-excluded_vars = c("ptid","tx");
-table1_summary <-  nsclc_data %>%   select(.,-one_of(excluded_vars)) %>%  qsummary(.)
-
-table1 =nsclc_data %>% group_by(.data$tx) %>%
-  summary_table(., table1_summary)
-
-rgroups =   rep(4,length(names(nsclc_data))-2)
-names(rgroups)=names(nsclc_data)[!names(nsclc_data)%in%excluded_vars]
-
-qable(table1,markup='markdown',rgroup=rgroups)
-```
-
-
-
-
-```{r eval=FALSE}
-nsclc_data.trt= nsclc_data %>% filter(tx == 1);
-nsclc_data.ctrl= nsclc_data %>% filter(tx == 0);
-table2_summary.trt <- nsclc_data.trt %>%   select("obstime","survival.past.400") %>%  qsummary(.)
-table2_summary.ctrl <- nsclc_data.ctrl %>%   select("obstime","survival.past.400") %>%  qsummary(.)
-
-table2=list();
-table2.trt=list();
-table2.ctrl=list();
-bin_list = c("europe",             "abnLDH","abnAlkphos")
-for(i_var in 1:length(bin_list)){
-(table2.trt[[i_var]] =nsclc_data.trt %>% group_by(.data[[bin_list[i_var]]]) %>% summary_table(., table2_summary.trt))
-(table2.ctrl[[i_var]] =nsclc_data.ctrl %>% group_by(.data[[bin_list[i_var]]]) %>% summary_table(., table2_summary.ctrl))
-
-table2[[i_var]] = cbind(table2.trt[[i_var]],table2.ctrl[[i_var]]);
-}
-rgroups2 =   rep(4,2)
-names(rgroups2)=c("obstime","survival.past.400")
-```
-
-<span style="color:red">Note: </span>  Draw the Kaplan-Meier curve with no adjusted variables [Link](https://rviews.rstudio.com/2017/09/25/survival-analysis-with-r/).
-
-```{r eval=FALSE}
-library(ggplot2)
-library(survival)
-library(ggfortify)
-km_fit <- survfit(Surv(obstime, death) ~ tx, data=nsclc_data)
-
-autoplot(km_fit)
-```
-
-```{r eval=FALSE}
-qable(table2[[1]],markup="markdown",rgroup=rgroups2)
-```
-
-
-```{r eval=FALSE}
-qable(table2[[2]],markup="markdown",rgroup=rgroups2)
-```
-
-
-```{r eval=FALSE}
-qable(table2[[3]],markup="markdown",rgroup=rgroups2)
-```
 
 ## Inferential Analysis
+```{r}
+library(filling)
 
-Lambda by error plot:
+data.mat = data.matrix(review_data)
+data.mat = data.mat[,2:25]
+data.mat = t(data.mat)
+#dim(data.mat)
+
+incomp10 = aux.rndmissing(data.mat, x = .1)
+incomp50 = aux.rndmissing(data.mat, x = 0.5)
+incomp75 = aux.rndmissing(data.mat, x = 0.75)
 
 
-The optimal value for lambda is _ and the error is __. In reality, in a matrix completion problem, you wouldnt know the ground truth. Then, to pick a lambda, one should treat a subset of values of the incomplete matrix as missing. This would allow you to validate the lambda that you pick to see if the matrix completion generalizes well 
+```
+
+
+### 10% incomplete
+```{r}
+# running soft impute for the following lambda values
+aa = seq(1,101, by=10)
+lambdasL = rev(aa)
+comp10 = fill.SoftImpute(incomp10,lambdas =lambdasL)
+comp10 = comp10$X
+
+## calculating total residual for each lambda value
+d = dim(comp10)
+normC = c()
+for (i in 1:d[3]){
+    r = data.mat - comp10[,,i]
+    a = norm(r,type = "F")
+    normC = append(normC, a)}
+minE = which(normC == min(normC))
+bestcomp10 = comp10[,,minE]
+plot(aa, rev(normC), xlab= "lambda values", ylab = "total residual", main= "Residuals of Lambda values (10% incomplete)")
 
 
 
 
-The likelihood ratio test for the two models yields a p-value of r lklh_ratio[[4]][2].
+```
+
+
+```{r}
+obsvRdata = incomp10 - bestcomp10
+obsvRdata = as.vector(obsvRdata)
+obsvR = sum(obsvRdata*obsvRdata, na.rm = T)
+totR = min(normC)
+unobR = totR-obsvR
+```
+
+Total Residual = `r totR `
+Observed Residual = `r obsvR `
+Unobserved Residual = `r unobR `
+
+
+
+### 50% incomplete
+```{r}
+aa = seq(1,101, by=10)
+lambdasL = rev(aa)
+comp50 = fill.SoftImpute(incomp50,lambdas =lambdasL)
+comp50 = comp50$X
+
+## calculating total residual for each lambda value
+d = dim(comp50)
+normC = c()
+for (i in 1:d[3]){
+    r = data.mat - comp50[,,i]
+    a = norm(r,type = "F")
+    normC = append(normC, a)}
+minE = which(normC == min(normC))
+bestcomp50 = comp50[,,minE]
+plot(aa, rev(normC), xlab= "lambda values", ylab = "total residual", main= "Residuals of Lambda values (50% incomplete)")
+
+```
+
+
+```{r}
+obsvRdata = incomp50 - bestcomp50
+obsvRdata = as.vector(obsvRdata)
+obsvR = sum(obsvRdata*obsvRdata, na.rm = T)
+totR = min(normC)
+unobR = totR-obsvR
+
+```
+
+Total Residual = `r totR `
+Observed Residual = `r obsvR `
+Unobserved Residual = `r unobR `
+
+### Conclusion
+As expected, there is a larger residual error in completing the matrix that has more missing data. The matrix completeion works quite well there is about `r unobR/(5456*25*.1)` error per completed entry. Because the observed residual is quite small, both 10% and 50% completion are able to recover the observed values with high accuracy.
+
 
 
 # Session information

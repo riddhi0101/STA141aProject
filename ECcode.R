@@ -9,24 +9,27 @@ dim(data.mat)
 incomp10 = aux.rndmissing(data.mat, x = .1)
 incomp75 = aux.rndmissing(data.mat, x = 0.75)
 
-aa = seq(.1,1, by=.1)
+## 10% incomplete
+aa = seq(1,101, by=10)
 lambdasL = rev(aa)
-lambdasL = 11
 comp10 = fill.SoftImpute(incomp10,lambdas =lambdasL)
 comp10 = comp10$X
 
-comp10l10 = comp10[,,1]
-r = data.mat - comp10l10
-norm(r,type = "F")
-
+## calculating total residual for each lambda value
 d = dim(comp10)
-normC.1to1 = c()
+normC = c()
 for (i in 1:d[3]){
-    print(i)
     r = data.mat - comp10[,,i]
     a = norm(r,type = "F")
-    normC.1to1 = append(normC, a)}
+    normC = append(normC, a)}
+minE = which(normC == min(normC))
+bestcomp10 = comp10[,,minE]
+plot(aa, rev(normC), xlab= "lambda values", ylab = "total residual", main= "Residuals of Lambda values (10% incomplete)")
 
-#plot(a,normC)
-normC
+## residual calculations
 
+obsvRdata = incomp10 - bestcomp10
+obsvRdata = as.vector(obsvRdata)
+obsvR = sum(obsvRdata*obsvRdata, na.rm = T)
+totR = min(normC)
+unobR = totR-obsvR

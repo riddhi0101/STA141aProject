@@ -104,23 +104,6 @@ s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
 s9 = subClustering("zoo", "resort", "bar", review_data)
 
 
-s1 = subClustering("view_points", "park", "beach", review_data)
-
-s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
-
-s3 = subClustering("restaurant", "bar", "local_service", review_data)
-
-s4 = subClustering("gardens", "gym", "spa", review_data)
-
-s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
-
-s6 = subClustering("resort", "bakeries", "zoo", review_data)
-
-s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
-
-s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
-
-s9 = subClustering("zoo", "resort", "bar", review_data)
 
 
 
@@ -172,7 +155,7 @@ as9$highC
 #Combos to include in the report
 high1 = subClustering('gym','swimming_pool','bakeries',review_data)
 h1data = high1$datamat
-plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 115, 
+Abaplot = scatterplot3d(h1data[,1:3], pch = 16, angle = 115, 
                      color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
 plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 137, 
                      color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
