@@ -57,8 +57,7 @@ review_data %>%rename(
 
 ## K-means- doesnt give a very high silhouette index
 library(NbClust)
-data = data.matrix(review_data)
-data = data[,-1]
+
 ## all indices- takes too long
 nb <- NbClust(data, distance = "euclidean", min.nc = 2,
               max.nc = 30, method = "complete", index ="silhouette")    
@@ -66,3 +65,13 @@ nb <- NbClust(data, distance = "euclidean", min.nc = 2,
 nb <- NbClust(data, distance = "euclidean", min.nc = 2,
               max.nc = 30, method = "complete", index ="dunn")    
 
+library(reshape2)
+data = data.matrix(review_data)
+data = data[,-1]
+corM <- cor(data)
+melted_cormat <- melt(corM)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                                       name="Pearson\nCorrelation") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,  size = 8, hjust = 1))

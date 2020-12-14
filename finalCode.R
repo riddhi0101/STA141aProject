@@ -1,6 +1,8 @@
 ## grouping clustering
 library("scatterplot3d")
 library(dplyr)
+library(tidyr)
+library(qwraps2)
 library(kernlab)
 library(cluster)
 ## project prelims
@@ -53,70 +55,73 @@ review_data = review_data %>% rename(
 )
 
 
-#data.mat = data.matrix(review_data)
-#data.mat = data.mat[,-1]
+
+## DESCRIPTIVE ANALYSIS
 
 
-# view points, park, beach
-# theater, art galleries, cafe
-# restaurants, bar, local service
-#24,18,20
-#16,5,20
-#2,19,8
-#15,10,19
-#22,6,12
-#8,2,10
-c1  = review_data %>% select(gym, swimming_pool, bakeries)
-
-kmeans.out <- kmeans(c1,3,nstart=50,iter.max = 15)
-c1 = cbind(c1,kmeans.out$cluster)
-colnames(c1)[4] <- "cluster"
-c1[,4] = as.factor(c1[,4])
-scatterplot3d(c1[,1:3], pch = 16, angle = 55, color = c1[,4])
-ggplot(c1, aes(x=swimming_pool, y=gym, shape = cluster)) + 
-    geom_point(aes(color=bakeries))
+table1_summary <-  review_data %>%  qsummary(.)
 
 
-silInds = c()
+subClustering <- function(cat1,cat2,cat3,datac,kmax = 7, angleI = 55){
+    c1  = datac %>% select(cat1, cat2, cat3)
+    #c1 = data.matrix(c1)
+    
+    silList=rep(0,kmax-1)
+    for(i in 2:kmax){
+        kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+        ss <- silhouette(kmeans.out$cluster, dist(c1))
+        silList[i-1] = mean(ss[, 3])
+    }
+    a = which(silList == max(silList)) + 1
+    kmeans.out <- kmeans(c1,a,nstart=50,iter.max = 15)
+    c1 = cbind(c1,kmeans.out$cluster)
+    colnames(c1)[4] <- "cluster"
+    c1[,4] = as.factor(c1[,4])
+    plot = scatterplot3d(c1[,1:3], pch = 16, angle = angleI , color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+    return(list(silList = silList, datamat = c1, plot = a, highC = silList[a-1], clusts = a))
+}
+
+
+
 s1 = subClustering("view_points", "park", "beach", review_data)
-silInds = append(silInds, s1$highC)
+s1$clusts
+s1$highC
+
 s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
-silInds = append(silInds, s2$highC)
+
 s3 = subClustering("restaurant", "bar", "local_service", review_data)
-silInds = append(silInds, s3$highC)
+
 s4 = subClustering("gardens", "gym", "spa", review_data)
-silInds = append(silInds, s4$highC)
+
 s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
-silInds = append(silInds, s5$highC)
+
 s6 = subClustering("resort", "bakeries", "zoo", review_data)
-silInds = append(silInds, s6$highC)
+
 s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
-silInds = append(silInds, s7$highC)
+
 s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
-silInds = append(silInds, s8$highC)
+
 s9 = subClustering("zoo", "resort", "bar", review_data)
-silInds = append(silInds, s9$highC)
 
 
-silInds = c()
 s1 = subClustering("view_points", "park", "beach", review_data)
-silInds = append(silInds, s1$highC)
+
 s2 = subClustering("theatre", "art_galleries", "cafe", review_data)
-silInds = append(silInds, s2$highC)
+
 s3 = subClustering("restaurant", "bar", "local_service", review_data)
-silInds = append(silInds, s3$highC)
+
 s4 = subClustering("gardens", "gym", "spa", review_data)
-silInds = append(silInds, s4$highC)
+
 s5 = subClustering("dance_clubs", "theatre", "spa", review_data)
-silInds = append(silInds, s5$highC)
+
 s6 = subClustering("resort", "bakeries", "zoo", review_data)
-silInds = append(silInds, s6$highC)
+
 s7 = subClustering("art_galleries", "bar", "bakeries", review_data)
-silInds = append(silInds, s7$highC)
+
 s8 = subClustering("view_points", "museum", "burger_pizza", review_data)
-silInds = append(silInds, s8$highC)
+
 s9 = subClustering("zoo", "resort", "bar", review_data)
-silInds = append(silInds, s9$highC)
+
 
 
 ks1 = subClustering('bar', 'burger_pizza', 'juice_bars', review_data)
@@ -169,8 +174,21 @@ high1 = subClustering('gym','swimming_pool','bakeries',review_data)
 h1data = high1$datamat
 plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 115, 
                      color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 137, 
+                     color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+
 high2 = subClustering("gardens", "gym", "spa", review_data)
+h2data = high2$datamat
+plot = scatterplot3d(h2data[,1:3], pch = 16, angle = 115, 
+                     color = h2data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+plot = scatterplot3d(h2data[,1:3], pch = 16, angle = 137, 
+                     color = h2data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
 high3 = subClustering('art_galleries','monuments','gardens',review_data)
+h3data = high3$datamat
+plot = scatterplot3d(h3data[,1:3], pch = 16, angle = 115, 
+                     color = h3data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+plot = scatterplot3d(h3data[,1:3], pch = 16, angle = 137, 
+                     color = h3data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
 
 low1 = subClustering("zoo", "resort", "bar", review_data)
 low2 = subClustering('park', 'burger_pizza', 'church', review_data)

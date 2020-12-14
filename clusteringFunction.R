@@ -74,9 +74,11 @@ subClustering <- function(cat1,cat2,cat3,datac,kmax = 7, angleI = 55){
     colnames(c1)[4] <- "cluster"
     c1[,4] = as.factor(c1[,4])
     plot = scatterplot3d(c1[,1:3], pch = 16, angle = angleI , color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
-    return(list(silList = silList, datamat = c1, plot = a, highC = silList[a-1]))
+    return(list(silList = silList, datamat = c1, plot = a, highC = silList[a-1], clusts = a))
 }
 
 
 ss = subClustering('gym','mall','swimming_pool',review_data)
 ss$highC
+
+
