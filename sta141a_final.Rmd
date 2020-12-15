@@ -1,0 +1,433 @@
+---
+title: "User Clustering of Travel Ratings"
+author: "Aman Singh, Riddhi Barbhaiya, Karl Jang"
+date: "12/13/2020"
+output:
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 12pt
+geometry: margin = 1in
+header-includes:
+  - \usepackage{setspace}\doublespacing
+  - \PassOptionsToPackage{x11names}{xcolor}
+---
+$$\textbf{\underline{Background:}}$$
+  With the advent of mobile devices allowing users to access the Internet ubiquitously, travel guidelines have largely transitioned from passive mass media to interactive social media. Users’ public impressions can now influence others’ decisions on their activities. Although such a phenomenon is not limited to the following method of reviews and geographical surroundings, ratings are the easiest to be interpreted quantitatively as they represent overall perception of places and highly-developed continents may generate better results because most people, both locals and tourists, can afford mobile devices. Therefore, in this project, we analyze average Google review ratings for 24 different categories of attractions across Europe, such as bars, restaurants, and gyms, ranging from 0 to 5 stars. 
+
+  In this project, we cluster subgroups of people by their ratings across three different categories for two main reasons. First, to see if they similarly rate identical categories of attractions. Second, in order to analyze whether similar categories of attractions have comparable review ratings. Clustering people based on how they rate places may also allow us to pattern what people generally prefer or defer, inferred from incomplete ratings data. In turn,we could use this information to notify and create a relevant recommendation system determined by the individuals’ previous ratings.
+
+$$\textbf{\underline{Statistical Question of Interest:}}$$
+  In order to elaborate both of our aforementioned justifications, we first explore how to best cluster users based on their review ratings. To achieve this goal, we use k-means clustering and generate silhouette index. For inferring about the users’ characteristics based on our clustering, we graph the relations in 3-dimensional scatterplots.
+
+$$\textcolor{red}{\textbf{How can we best cluster users based on their review ratings?}}$$
+$$\textcolor{red}{\textbf{What can we infer about users from our clustering?}}$$
+
+```{r,echo=FALSE,include=FALSE}
+library("scatterplot3d")
+library(dplyr)
+library(kernlab)
+library(cluster)
+library(ggplot2)
+library(qwraps2)
+## project prelims
+travel_review <- read.csv("~/Desktop/Statistics/google_review_ratings.csv")
+head(travel_review)
+## correcting for errors
+error_lines= which(!is.na(travel_review$X))
+# One line has Category.24 misplaced at another column
+travel_review$Category.24[error_lines[1]] = travel_review$X[error_lines[1]]
+# One line has put a character value at Category.11. Correct it to 2.  
+travel_review$Category.11[error_lines[2]] = 2
+# The line misplaced all columns after Category.12.
+travel_review[error_lines[2],13:25] = travel_review[error_lines[2],14:26]
+# Change Category.11 to numeric 
+travel_review$Category.11 = as.numeric(travel_review$Category.11)
+# Delete an extra column  
+review_data = travel_review[ names(travel_review) != "X"]
+# Delete the temporary variables/data
+if(exists('travel_review')) 
+    rm(travel_review)
+if(exists('error_lines'))
+    rm(error_lines)
+
+review_data = review_data %>% rename(
+    church = Category.1,
+    resort = Category.2,
+    beach = Category.3,
+    park = Category.4,
+    theatre = Category.5,
+    museum = Category.6,
+    mall = Category.7,
+    zoo = Category.8,
+    restaurant = Category.9,
+    bar = Category.10,
+    local_service = Category.11,
+    burger_pizza = Category.12,
+    hotel = Category.13,
+    juice_bars = Category.14,
+    art_galleries = Category.15,
+    dance_clubs = Category.16,
+    swimming_pool = Category.17,
+    gym = Category.18,
+    bakeries = Category.19,
+    spa = Category.20,
+    cafe = Category.21,
+    view_points = Category.22,
+    monuments = Category.23,
+    gardens = Category.24
+)
+
+```
+
+$$\textbf{\underline{Analysis Plan:}}$$
+\textbf{\underline{Descriptive Analysis:}}
+
+  We will summarize the distribution of ratings for each category to understand how users typically rate this category. We then create a correlation matrix between the categories to identify patterns of relationships. This will help us to understand how the categories co-vary.
+```{r,echo=FALSE,include=FALSE}
+subClustering <- function(cat1,cat2,cat3,datac,kmax = 7, angleI = 55){
+    c1  = datac %>% select(cat1, cat2, cat3)
+    #c1 = data.matrix(c1)
+    
+    silList=rep(0,kmax-1)
+    for(i in 2:kmax){
+        kmeans.out <- kmeans(c1,i,nstart=50,iter.max = 15)
+        ss <- silhouette(kmeans.out$cluster, dist(c1))
+        silList[i-1] = mean(ss[, 3])
+    }
+    a = which(silList == max(silList)) + 1
+    kmeans.out <- kmeans(c1,a,nstart=50,iter.max = 15)
+    c1 = cbind(c1,kmeans.out$cluster)
+    colnames(c1)[4] <- "cluster"
+    c1[,4] = as.factor(c1[,4])
+    plot = scatterplot3d(c1[,1:3], pch = 16, angle = angleI , color = c1[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+    return(list(silList = silList, datamat = c1, plot = a, highC = silList[a-1], clusts = a))
+}
+```
+
+\textbf{\underline{Main Analysis:}}
+
+  For this project, we primarily use k-means to cluster the data. We then evaluate the quality of the clusters with the silhouette index. In order to use k-means to find x clusters, we pick x points to be the center of the clusters. Then, for each point, we calculate the distance from the point to each of the centers picking the lowest and assigning it to a cluster, subsequently recalculating the centers as the results update. We repeat this process until the centers have been found. 
+We essentially want the points within clusters to be homogeneous and each cluster to be distinct from the others. To measure this property, we use the silhouette index. A silhouette coefficient is computed for each point and then to get the index for all data points, we average the coefficient. The silhouette coefficient is calculated as follows: 
+$$
+S_i = \frac {b_i - a_i}  {max(a_i, b_i)}
+$$
+,where $a_i$ is the average dissimilarity of point i from all other points in the cluster, and $b_i$ is the smallest average distance between point i and other points in each cluster. 
+
+Initially, we cluster all ratings across all 24 categories using k-means. By doing so, our clustering has a silhouette indexed very close to 0, indicating that the within cluster variation is widely prevalent and the distance from other clusters is small. 
+
+We then perform clustering for three categories for a total of 27 combinations, with 9 being chosen by the study group and 18 chosen at random. This was done to analyze clustering patterns within smaller subsets of the data, also producing more coherent clusters. We utilize silhouette index while clustering to pick the numbers of clusters to adopt, between 2 to 7. Then, we visualize the clustering of the three best combinations and the three worst in terms of silhouette index to locate clusters. 
+
+In addition to the two methods of clustering mentioned above, we also attempt to use spectral clustering to see if there are any nonlinear clusters in the data that is not accounted for by k-means. Unfortunately, we are unable to perform spectral clustering due to its intensive, time-demanding nature in running the code. Our computer would freeze up due to the size of the data set and the requirement of a considerable computing power. 
+ 
+$$\textbf{\underline{Results:}}$$
+\textbf{\underline{Descriptive Analysis:}}
+
+We run summary statistics to learn more about the data set. This correlation graph shows how each feature is correlated to another feature in the data set, with the blue color showing a negative correlation, and the red color showing a positive correlation. The summary table shows all the features in the data set with there respective mean, standard deviation, minimum, maximum, the first quartile and the third quartile:
+```{r,echo=FALSE,out.width="50%",fig.align="center"}
+library(reshape2)
+data = data.matrix(review_data)
+data = data[,-1]
+corM <- cor(data)
+melted_cormat <- melt(corM)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + 
+    geom_tile() + scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                                       name="Pearson\nCorrelation") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1,  size = 8, hjust = 1))
+```
+```{r,echo=FALSE,warning=FALSE,include=FALSE}
+library(stargazer)
+```
+```{r,echo=FALSE,results = "asis",warning=FALSE}
+stargazer(review_data,header = FALSE,omit.table.layout = "sn")
+```
+
+\break
+
+\textbf{\underline{Clustering Results:}}
+
+  For each combination in Table 2, we computed k-means clustering for k = 2,...,7 and then calculated the silhouette index. We chose 7 as the max number of clusters because for most of the clusters, the silhouette index declines after 6. Table 2 shows all the combinations we considered, the resulting number of clusters, and the best silhouette index. Note that the three rows highlighted in blue are the best clusterings based on the silhouette index, and the three others highlighted in red are the worst:
+
+\begin{table}[hbt!]
+\caption{Quality of Clustering Combinations with Index and clusters}
+\centering
+\begin{tabular}{ |c|c|c| } 
+ \hline
+ Clusters & Number of clusters & Silhouette Index \\ 
+ \hline
+ \hline
+ View Points,Park,Beach & 6 & .5620834  \\ 
+ \hline
+ Theater,Art Galleries,Cafe & 4 & .5994621 \\ 
+ \hline
+ Restaurant, Bar, Local Service & 7 & .5431321 \\ 
+ \hline
+ \textcolor{blue}{Gardens,Gym,Spa} & \textcolor{blue}{4} & \textcolor{blue}{.7145031} \\ 
+ \hline
+ Dance Clubs, Theater, Spa & 4 & .6046022 \\ 
+ \hline
+ \textcolor{red}{Resort, Bakeries, Zoo} & \textcolor{red}{3} & \textcolor{red}{.5156392} \\
+ \hline
+ Art Galleries, Bar, Bakeries & 5 & .551172 \\
+ \hline
+ View Points, Museum, Burger-Pizza & 4 & .5344893 \\
+ \hline
+ \textcolor{red}{Zoo, Resort, Bar} & \textcolor{red}{2} & \textcolor{red}{.4211836} \\
+ \hline
+ Bar, Burger-Pizza,Juice Bars & 5 & .5932957 \\
+ \hline
+ Zoo, Hotel, Dance Clubs & 3 & .5758509 \\
+ \hline
+ Bakeries, Cafe, Park & 4 & .6029162 \\
+ \hline
+ Gardens, Resort, Swimming Pool & 4 & .6468726 \\
+ \hline
+ Restaurant, Theater, Bakeries & 4 & .522686 \\
+ \hline
+ Museum, Spa, Art Galleries & 6 & .5726653 \\
+ \hline
+ \textcolor{red}{Park, Burger-Pizza, Church} & \textcolor{red}{3} & \textcolor{red}{.5004534} \\
+ \hline
+ Dance Clubs, Monuments, Museum & 4 & .5812412 \\
+ \hline
+ Art Galleries, Gym, Bar & 5 & .5632228 \\
+ \hline
+ Gym, Park, Mall & 5 & .5490831 \\
+ \hline
+ \textcolor{blue}{Gym, Swimming Pool, Bakeries} & \textcolor{blue}{3} & \textcolor{blue}{.7618442} \\
+ \hline
+ Resort, Beach, Spa & 4 & .5719415 \\
+ \hline
+ Church, Art Galleries, Monuments & 3 & .6400298 \\
+ \hline
+ Gardens, Hotel, Monuments & 5 & .6351123 \\
+ \hline
+ Bar, Gym, Local Service & 4 & .5752452 \\
+ \hline
+ Theater, View Points, Museum & 7 & .4979704 \\
+ \hline
+ Theater, Museum, Restaurant & 5 & .4809223 \\
+ \hline
+ Hotel, Art Galleries, Gardens & 6 & .6596394 \\
+ \hline
+ \textcolor{blue}{Art Galleries, Monuments, Gardens} & \textcolor{blue}{5} & \textcolor{blue}{.6537716} \\
+ \hline
+\end{tabular}
+\bigskip
+
+The top 3 clusters are colored in \textcolor{blue}{Blue}, the lowest 3 in \textcolor{red}{Red}
+\end{table}
+\break
+
+\textbf{\underline{Graphs of Best Clusterings:}}
+
+Following, we have graphed the 3 best clustering out of all 27 combinations.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+high1 = subClustering('gym','swimming_pool','bakeries',review_data)
+h1data = high1$datamat
+plot = scatterplot3d(h1data[,1:3], pch = 16, angle = 300, 
+                     color = h1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+  We have three clusters for this combination. The lime cluster represents reviewers who somewhat highly rated bakeries between three to five stars, whereas most of their ratings on gyms and bakeries were poor. These raters may be big eaters since their appetite could positively influence their perception of food places, including bakeries. Conversely, they would not enjoy exercising as much as discovering new cuisines, hence rating fitness facilities like gyms and swimming pools with low stars.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+high2 = subClustering("gardens", "gym", "spa", review_data)
+h2data = high2$datamat
+plot = scatterplot3d(h2data[,1:3], pch = 16, angle = 300, 
+                     color = h2data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+  There are four distinct clusters present. The black cluster indicates a group of people reviewed gardens relatively highly with three stars or higher, but their ratings on spas were mixed and the gyms were poorly rated. These raters could be nature lovers because gardens consist of multiple flora of potential interest, while their views on indoor spaces greatly differ. One possible reason why gyms were rated lower than spas could be due to their inclusion of manmade materials such as barbells and treadmills.
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+high3 = subClustering('art_galleries','monuments','gardens',review_data)
+h3data = high3$datamat
+plot = scatterplot3d(h3data[,1:3], pch = 16, angle = 300, 
+                     color = h3data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+  Five clusters are generated from this combo. The people in the black cluster have highly rated art galleries but their reviews on gardens and monuments were mixed. They might reflect older audiences because the elderly tend to prefer indoor spaces such as art galleries but their inclination towards outdoors varies greatly depending on their underlying conditions.
+  
+  To our surprise, all three graphs have similar clusters; some reviewers tended to rate every category of attractions unfavorably, usually at two stars or lower on average. We conclude they are Internet trolls because such a uniform pattern cannot be observed if their ratings reflect their actual perception, especially since combinations one and three do not share any category of attractions.
+
+\textbf{\underline{Graphs of Worst Clusterings:}}
+
+  Following, we have graphed the 3 worst clustering out of all 27 combinations. We include them to depict that the quality of clustering partially depends on the categories considered.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+low1 = subClustering("zoo", "resort", "bar", review_data)
+l1data = low1$datamat
+plot = scatterplot3d(l1data[,1:3], pch = 16, angle = 300, 
+                     color = l1data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+low2 = subClustering('park', 'burger_pizza', 'church', review_data)
+l2data = low2$datamat
+plot = scatterplot3d(l2data[,1:3], pch = 16, angle = 300, 
+                     color = l2data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,fig.show='hold',out.width="50%"}
+low3 = subClustering("resort", "bakeries", "zoo", review_data)
+l3data = low3$datamat
+plot = scatterplot3d(l3data[,1:3], pch = 16, angle = 300, 
+                     color = l3data[,4], xlim = c(0,5), ylim = c(0,5), zlim= c(0,5))
+```
+
+
+$$\textcolor{red}{\textbf{\underline{Extra Credit:}}}$$
+$$\textbf{\underline{Introduction:}}$$
+
+\textbf{\underline{Background:}}
+
+  In this portion of the project, we attempt to implement matrix completion in the google travel reviews dataset. The data includes average ratings from approximately 5,000 people on 24 different categories of attractions(spa, resort, etc).
+
+  In reality, one may obtain only partial review data and would like to infer the rest to provide accurate recommendations. To simulate this situation, we randomly select a portion of the data to treat as missing and then use matrix completion to predict the missing ratings. Because we have complete data, we can then compare the predictions to the true ratings. This line of analysis is inspired primarily from "Exact Matrix Completion via Convex Optimization" by Candes and Retchet. To do the actual computation, we use the soft impute algorithm(Mazumder, 2010).
+
+\textbf{\underline{Statistical questions of Interest:}}
+
+  Our goal is to complete the matrix. In doing so, we assume that the data has some low rank structure, there is some information about ratings in each row and column(ensured by random sampling), and that the matrix is incoherent. These conditions are requirements for the completion problem to be well posed(Candes 2008). To evaluate our predictions, we compare our completed matrix to the whole data.
+
+$$\textbf{\underline{Analysis Plan:}}$$
+
+
+\textbf{\underline{Matrix Completion:}}
+
+Let $X$ be the data matrix which is 24 by 5,426 (5,426 users and 24 categories reviewed). $X_{ij}$ is the average review rating of the jth person in the ith category. Let $\Omega$ be the set of observed entries. This set is created by randomly sampling points to treat as observed from the full matrix $X$.
+Let 
+$$ P_{\Omega}(X) = \left\{
+        \begin{array}{ll}
+            X_{ij} & \quad (i,j) \in \Omega \\
+            0 & \quad otherwise
+        \end{array}
+    \right.
+  $$
+and let $Z$ be the matrix that is completed using the soft impute method.
+
+The objective of the matrix completion is to find the matrix $Z$ such that it has the smallest possible rank and the observed entries are as close to the original as possible. This can be written as follows, where $\delta$ is some small real number: 
+$$ \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F < \delta\\
+min \: \left\|Z \right\|_*$$
+Here, $\left\|Z \right\|_*$ is the nuclear norm defined as follows.  $\sigma(Z)$ are the singular values of Z. The nuclear norm is used as an estimator of the rank because it is easier to minimize.
+$$
+\left\|Z \right\|_* = \sum_{k = 1}^{n} \sigma_k(Z)
+$$
+
+To solve this, we decided to use the soft impute algorithm (Mazumderet al.,2010) to minimize the following function. It essentially uses soft thresholding to solve the objective function specified below:
+
+
+$$
+\min_Z f_\lambda(Z) = \frac{1}{2} \left\| P_\Omega (X) - P_\Omega(Z) \right\|_F^2 + \lambda\left\| Z\right\|_*
+$$
+To choose the hyperparameter, we run soft impute on the following $\lambda$ values (1,6,11...,101). Then we calculate the frobenius norm of the residual as shown below. We choose the $\lambda$ values which results in the smallest value for the residual because it gives the matrix that is closest to the original. 
+$$
+total\:residual = \left\|Z-X\right\|_F
+$$
+In reality, in a matrix completion problem, one wouldn't know the ground truth. Then, to pick a $\lambda$, one should treat a subset of values of the incomplete matrix as missing (creating a train/test set). This would allow one to validate the $\lambda$ that one picks to see ensure the matrix completion generalizes well.
+
+To look more closely at our completed matrix, we calculate partitions of the residuals in the following ways:
+
+$$
+observed \: residual = \left\|P_\Omega(Z) - P_\Omega(X) \right\|_F \\
+$$
+$$
+unobserved \: residual = \left\|P_{\notin \Omega} (Z) - P_{\notin \Omega}(X) \right\|_F 
+$$
+
+
+$$\textbf{\underline{Results:}}$$
+
+
+\textbf{\underline{Inferential Analysis:}}
+```{r,warning= FALSE,include=FALSE,echo=FALSE}
+library(filling)
+data.mat = data.matrix(review_data)
+data.mat = data.mat[,2:25]
+data.mat = t(data.mat)
+#dim(data.mat)
+incomp10 = aux.rndmissing(data.mat, x = .1)
+incomp50 = aux.rndmissing(data.mat, x = 0.5)
+incomp75 = aux.rndmissing(data.mat, x = 0.75)
+```
+
+
+### 10% incomplete
+```{r,warning= FALSE,echo=FALSE}
+# running soft impute for the following lambda values
+aa = seq(1,101, by=10)
+lambdasL = rev(aa)
+comp10 = fill.SoftImpute(incomp10,lambdas =lambdasL)
+comp10 = comp10$X
+## calculating total residual for each lambda value
+d = dim(comp10)
+normC = c()
+for (i in 1:d[3]){
+    r = data.mat - comp10[,,i]
+    a = norm(r,type = "F")
+    normC = append(normC, a)}
+minE = which(normC == min(normC))
+bestcomp10 = comp10[,,minE]
+plot(aa, rev(normC), xlab= "lambda values", ylab = "total residual", main= "Residuals of Lambda values (10% incomplete)")
+```
+
+
+```{r,warning= FALSE,include=FALSE,echo=FALSE}
+obsvRdata = incomp10 - bestcomp10
+obsvRdata = as.vector(obsvRdata)
+obsvR = sum(obsvRdata*obsvRdata, na.rm = T)
+totR = min(normC)
+unobR = totR-obsvR
+```
+
+Total Residual = `r totR `
+
+Observed Residual = `r obsvR `
+
+Unobserved Residual = `r unobR `
+
+
+
+### 50% incomplete
+```{r,warning= FALSE,echo=FALSE}
+aa = seq(1,101, by=10)
+lambdasL = rev(aa)
+comp50 = fill.SoftImpute(incomp50,lambdas =lambdasL)
+comp50 = comp50$X
+## calculating total residual for each lambda value
+d = dim(comp50)
+normC = c()
+for (i in 1:d[3]){
+    r = data.mat - comp50[,,i]
+    a = norm(r,type = "F")
+    normC = append(normC, a)}
+minE = which(normC == min(normC))
+bestcomp50 = comp50[,,minE]
+plot(aa, rev(normC), xlab= "lambda values", ylab = "total residual", main= "Residuals of Lambda values (50% incomplete)")
+```
+
+
+```{r,warning=FALSE,include=FALSE,echo=FALSE}
+obsvRdata = incomp50 - bestcomp50
+obsvRdata = as.vector(obsvRdata)
+obsvR = sum(obsvRdata*obsvRdata, na.rm = T)
+totR = min(normC)
+unobR = totR-obsvR
+```
+
+Total Residual = `r totR `
+
+Observed Residual = `r obsvR `
+
+Unobserved Residual = `r unobR `
+
+\textbf{\underline{Conclusion:}}
+
+  As expected, there is a larger residual error in completing the matrix that has more missing data. The matrix completion works quite well; there is about `r unobR/(5456*25*.1)` error per completed entry. Because the observed residual is quite small, both 10% and 50% completion are able to recover the observed values with high accuracy.
+
+
+\textbf{\underline{Citations:}}
+
+Mazumder, Rahul & Hastie, Trevor & Tibshirani, Robert. (2010). Spectral Regularization Algorithms for Learning Large Incomplete Matrices. Journal of machine learning research : JMLR. 11. 2287-2322. 
+
+Candès, E.J., Recht, B. Exact Matrix Completion via Convex Optimization. Found Comput Math 9, 717 (2009). https://doi.org/10.1007/s10208-009-9045-5
